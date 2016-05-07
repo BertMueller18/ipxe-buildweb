@@ -2,7 +2,7 @@
  * ================================================================================
  * Dynamic iPXE image generator
  *
- * Copyright (C) 2012-2014 Francois Lacroix. All Rights Reserved.
+ * Copyright (C) 2012-2016 Francois Lacroix. All Rights Reserved.
  * Website: http://ipxe.org, https://github.com/xbgmsharp/ipxe-buildweb
  * License: GNU General Public License version 3 or later; see LICENSE.txt
  * ================================================================================
@@ -104,6 +104,24 @@ h3 span {
 	text-decoration: underline;
 }
 
+.help_buildcfg {
+	cursor: help;
+	color: #000;
+	text-decoration: none;
+}
+
+.help_buildcfg:hover{
+	cursor: help;
+	color: #000;
+	text-decoration: underline;
+}
+
+.error {
+	background-color: #FF0000;
+	text-decoration: underline;
+	font-size: 14px;
+}
+
 .wizard-header {
 	background-color: #f4f4f4;
 	border-bottom: #ddd 1px solid;
@@ -151,7 +169,7 @@ h3 span {
 	outline: none;
 	border-radius: 10px;
 	color: #ffffff;
-	display: block;
+	display: inline;
 	cursor:pointer;
 	margin: 0px auto;
 	clear: both;
@@ -165,6 +183,30 @@ h3 span {
 }
 
 .buildbutton:hover {
+	background: #d8d8d8;
+	color: #666;
+	text-shadow: 1px 1px 1px #fff;
+}
+
+.savebutton {
+	border: none;
+	outline: none;
+	border-radius: 10px;
+	color: #ffffff;
+	display: inline;
+	cursor:pointer;
+	margin: 0px auto;
+	clear: both;
+	padding: 7px 25px;
+	text-shadow: 0 1px 1px #777;
+	font-weight: bold;
+	font-family:"Century Gothic", Helvetica, sans-serif;
+	font-size: 22px;
+	box-shadow: 0px 0px 3px #aaa;
+	background: #16A70C;
+}
+
+.savebutton:hover {
 	background: #d8d8d8;
 	color: #666;
 	text-shadow: 1px 1px 1px #fff;

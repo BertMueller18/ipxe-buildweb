@@ -2,7 +2,7 @@
  * ================================================================================
  * Dynamic iPXE image generator
  *
- * Copyright (C) 2012-2014 Francois Lacroix. All Rights Reserved.
+ * Copyright (C) 2012-2016 Francois Lacroix. All Rights Reserved.
  * Website: http://ipxe.org, https://github.com/xbgmsharp/ipxe-buildweb
  * License: GNU General Public License version 3 or later; see LICENSE.txt
  * ================================================================================
@@ -24,7 +24,7 @@
 		<h1>
 			<a href="http://ipxe.org" title="iPXE website" target="_blank">Generate iPXE images</a> | <a href="#" id="about" title="About this website">About</a>
 		</h1>
-		<div id="about_pop_up"><a class="b-close">x</a></div>
+		<div id="about_pop_up"><a class="b-close">x</a><div class="content"></div></div>
 		<div id="wrapper">
 		<form action="#" enctype="multipart/form-data" method="post" id="ipxeimage" name="ipxeimage">
 
@@ -104,6 +104,8 @@
 					<label for="pci_vendor_code" form="ipxeimage">PCI VENDOR CODE: <input type="text" size="6" maxlength="4" value="" id="pci_vendor_code" name="pci_vendor_code" placeholder="8086"/></label>
 					<label for="pci_device_code" form="ipxeimage">PCI DEVICE CODE: <input type="text" size="6" maxlength="4" value="" id="pci_device_code" name="pci_device_code" placeholder="10de"/></label>
 					<p>
+						<div id="pci_roms_id_error" class="error" style="display: none">
+						</div>
 						iPXE does not support all possible PCI IDs for supported NICs.
 					</p>
 				</div>
@@ -162,7 +164,10 @@
 			<div id="build" class="build" style="display: none">
 				<div class="spacer">
 					<h2 class="wizard-header">Ready to build?</h2>
-					<input class="buildbutton" name="proceed" id="proceed" type="submit" value="Proceed &gt;&gt;" />
+					<div align="center">
+						<input class="buildbutton" name="proceed" id="proceed" type="submit" value="Proceed &gt;&gt;" />
+						<input class="savebutton" name="save" id="save" type="button" value="Save buildcfg" />
+					</div>
 				</div>
 			</div>
 

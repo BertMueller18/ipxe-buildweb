@@ -6,12 +6,12 @@
 #------------------------------------------------------------------------
 # Dynamic iPXE image generator
 #
-# Copyright (C) 2012-2014 Francois Lacroix. All Rights Reserved.
+# Copyright (C) 2012-2016 Francois Lacroix. All Rights Reserved.
 # License:  GNU General Public License version 3 or later; see LICENSE.txt
 # Website:  http://ipxe.org, https://github.com/xbgmsharp/ipxe-buildweb
 #------------------------------------------------------------------------
 ### Dependencies
-# apt-get install libjson-any-perl libjson-xs-perl
+# apt-get install libjson-perl
 # or
 # perl -MCPAN -e 'install JSON'
 ### Install
@@ -72,7 +72,7 @@ while (my $file = readdir(DIR))
                                         push(@$bool, {file=> $file, type => "input", name => $type, value => $name, description => $desc});
                                 }
                         }
-			elsif ($line =~ /([a-zA-Z_]*)(\t+|\s+)([a-zA-Z\"]+)$/g)
+			elsif ($line =~ /([a-zA-Z_]*)(\t+|\s+)([a-zA-Z\" ]+)$/g)
 			{
 				#print "----------Found in 1\n";
 				#print "1 - $1\n";

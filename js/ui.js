@@ -2,12 +2,14 @@
  * ================================================================================
  * Dynamic iPXE image generator
  *
- * Copyright (C) 2012-2014 Francois Lacroix. All Rights Reserved.
+ * Copyright (C) 2012-2016 Francois Lacroix. All Rights Reserved.
  * Website: http://ipxe.org, https://github.com/xbgmsharp/ipxe-buildweb
  * License: GNU General Public License version 3 or later; see LICENSE.txt
  * ================================================================================
  */
 $(document).ready(function() {
+
+        var roms = {device_id:[], vendor_id:[]}; /* Global Object for roms ID validation */
 
         $.getJSON("gitversion.php", null, function(data) {
                 //alert(data[0]);
@@ -28,6 +30,10 @@ $(document).ready(function() {
                         //alert(listnics[i].device_name);
                         //alert(listnics[i].ipxe_name);
                         options += '<option value="' + listnics[i].ipxe_name + '">' + listnics[i].ipxe_name + '</option>';
+                        if (listnics[i].device_id != null || listnics[i].vendor_id != null) {
+                            roms.device_id.push(listnics[i].device_id);
+                            roms.vendor_id.push(listnics[i].vendor_id);
+                        }
                 }
                 $("#nics").html(options);
         })
@@ -57,6 +63,11 @@ $(document).ready(function() {
                 subtitle.BANNER = 'Timer configuration:';
                 subtitle.NETDEV = 'Obscure configuration options:';
                 subtitle.PRODUCT = 'Branding options:';
+                subtitle.DHCP = 'DHCP timeout parameters:';
+                subtitle.PXEBS = 'PXE Boot Server timeout parameters:';
+                subtitle.USB = 'USB configuration:';
+                subtitle.HTTP = 'HTTP extensions:';
+                subtitle.VNIC = 'Virtual network devices:';
 
                 var listoptions = '';
                 var previous;
@@ -83,14 +94,27 @@ $(document).ready(function() {
                                         break;
                                 }
                         }
-                        if (custom[i].type == "define") {
-                                listoptions += '<label for="' + custom[i].name + '"><input type="checkbox" value="1" name="' + custom[i].file + '/' + custom[i].name + '" checked/>' + custom[i].name + ', ' + custom[i].description + '</label><br/><br/>';
+                        if (custom[i].type == "define" && (custom[i].name.indexOf("BANNER") !== -1)) {
+                                desc = custom[i].description;
+                                if (custom[i].name === custom[i].description) { desc = ""; }
+                                listoptions += '<label for="' + custom[i].name + '">' + custom[i].name + ': <input type="text" size="6" placeholder="' + custom[i].description.replace('"', '') + '" value="' + custom[i].description.replace('"', '') + '" name="' + custom[i].file + '/' + custom[i].name +'" /> Default: ' + desc + '</label><br/><br/>';
+                        } else if (custom[i].type == "define" && (custom[i].description.indexOf("0x") !== -1)) {
+                                desc = custom[i].description;
+                                if (custom[i].name === custom[i].description) { desc = ""; }
+                                listoptions += '<label for="' + custom[i].name + '">' + custom[i].name + ': <input type="text" size="6" placeholder="' + custom[i].description.replace('"', '') + '" value="' + custom[i].description.replace('"', '') + '" name="' + custom[i].file + '/' + custom[i].name +'" /> Default: ' + desc + '</label><br/><br/>';
+			} else if (custom[i].type == "define") {
+                                custom[i].href_help_name = '<a class="help_buildcfg" href="http://www.ipxe.org/buildcfg/' + custom[i].name + '" target="_blank">' + custom[i].name + '</a>';
+                                listoptions += '<label for="' + custom[i].name + '"><input type="checkbox" value="1" name="' + custom[i].file + '/' + custom[i].name + '" checked/>' + custom[i].href_help_name + ', ' + custom[i].description + '</label><br/><br/>';
                         } else if (custom[i].type == "undef") {
-                                listoptions += '<label for="' + custom[i].name + '"><input type="checkbox" value="0" name="' + custom[i].file + '/' + custom[i].name + '" />' + custom[i].name + ', ' + custom[i].description + '</label><br/><br/>';
+                                custom[i].href_help_name = '<a class="help_buildcfg" href="http://www.ipxe.org/buildcfg/' + custom[i].name + '" target="_blank">' + custom[i].name + '</a>';
+                                listoptions += '<label for="' + custom[i].name + '"><input type="checkbox" value="0" name="' + custom[i].file + '/' + custom[i].name + '" />' + custom[i].href_help_name + ', ' + custom[i].description + '</label><br/><br/>';
                         } else if (custom[i].type == "input") {
                                 desc = custom[i].description;
                                 if (custom[i].name === custom[i].description) { desc = ""; }
-                                listoptions += '<label for="' + custom[i].name + '">' + custom[i].name + ': <input type="text" size="6" placeholder="' + custom[i].value.replace('"', '') + '" value="' + custom[i].value.replace('"', '') + '" name="' + custom[i].file + '/' + custom[i].name +'" /> ' + desc + '</label><br/><br/>';
+				if (custom[i].name.indexOf("PRODUCT") !== -1)
+	                                listoptions += '<label for="' + custom[i].name + '">' + custom[i].name + ': <input type="text" size="50" placeholder="' + custom[i].value.replace('"', '') + '" value="' + custom[i].value.replace('"', '') + '" name="' + custom[i].file + '/' + custom[i].name +'" /> ' + desc + '</label><br/><br/>';
+				else
+	                                listoptions += '<label for="' + custom[i].name + '">' + custom[i].name + ': <input type="text" size="6" placeholder="' + custom[i].value.replace('"', '') + '" value="' + custom[i].value.replace('"', '') + '" name="' + custom[i].file + '/' + custom[i].name +'" /> ' + desc + '</label><br/><br/>';
                         } else { alert("we have an issue"); }
                 }
                 $("#options").html(listoptions);
@@ -200,7 +224,18 @@ $(document).ready(function() {
                         binary = $("#outputformatadv").val().split("/")[1];
                         if (binary.indexOf("rom", binary.length - 3) !== -1)
                         {
-                                binary = $("#pci_vendor_code").val().toLowerCase() + $("#pci_device_code").val().toLowerCase() + "." + binary;
+                                /* Ensure device_id and vendor_id are valid */
+                                var pci_vendor_code = $("#pci_vendor_code").val().toLowerCase();
+                                var pci_device_code = $("#pci_device_code").val().toLowerCase();
+                                var idx_vendor_id = roms.vendor_id.indexOf( pci_vendor_code );
+                                var idx_device_id = roms.device_id.indexOf( pci_device_code );
+                                if ( ((!pci_vendor_code) || (!pci_device_code)) && (idx_vendor_id !== -1) || (idx_device_id !== -1) && (idx_vendor_id === idx_device_id)) {
+                                    binary = $("#pci_vendor_code").val().toLowerCase() + $("#pci_device_code").val().toLowerCase() + "." + binary;
+                                } else {
+                                    $("#pci_roms_id_error").css({'display': 'inline'});
+                                    $("#pci_roms_id_error").html("Invalid or Unsupported pci_vendor_code or pci_device_code <br/>");
+                                    return;
+                                }
                         }
                         /* For all Checkbox in options div */
                         $("#options").find("input:checkbox").each(function(index) {
@@ -210,8 +245,6 @@ $(document).ready(function() {
                                         console.log( "Checkbox:" + index + ": " + name + " default: " + $(this).val() + " new: " + $(this).prop("checked") );
                                         options += name + ":=" + value + "&";
                                 }
-                                /* Unset value for roms images */
-                                debug = "";
                         });
                         /* For all text field in options div */
                         $("#options").find("input:text").each(function(index) {
@@ -221,8 +254,6 @@ $(document).ready(function() {
                                         console.log( "Text:" + index + ": " + name + " default: " + $(this).prop("placeholder") + " new: " + $(this).val());
                                         options += name + "=" + escape($(this).val()) + "&";
                                 }
-                                /* Unset value for roms images */
-                                debug = "";
                         });
                 }
 
@@ -230,6 +261,67 @@ $(document).ready(function() {
 
                 window.location.href = 'build.fcgi?BINARY='+binary+'&BINDIR='+bindir+'&REVISION='+revision+'&DEBUG='+debug+'&EMBED.00script.ipxe='+embed+'&'+options;
         });
+
+	/* Save buildcfg */
+        function buildcfg(evt) {
+                /* Get values from form */
+                var wizard = $('input:radio[name=wizardtype]:checked').val();
+                var bindir = "";
+                var binary = "";
+                var options = "";
+                /* Get generic values from form */
+                var debug = escape($("#setdebug").val());
+                var revision = $("#gitrevision").val();
+                var embed = escape($("#embed").val());
+                if (embed == "#!ipxe") { embed = ""; }
+                if (wizard == "standard")
+                { 	/* get values from elements on the STD wizard */
+                        bindir = $("#outputformatstd").val().split("/")[0];
+                        binary = $("#outputformatstd").val().split("/")[1];
+                }
+                else if (wizard == "advanced")
+                {	/* get values from elements on the ADV wizard */
+                        bindir = $("#outputformatadv").val().split("/")[0];
+                        binary = $("#outputformatadv").val().split("/")[1];
+                        if (binary.indexOf("rom", binary.length - 3) !== -1)
+                        {
+                                /* Ensure device_id and vendor_id are valid */
+                                var pci_vendor_code = $("#pci_vendor_code").val().toLowerCase();
+                                var pci_device_code = $("#pci_device_code").val().toLowerCase();
+                                var idx_vendor_id = roms.vendor_id.indexOf( pci_vendor_code );
+                                var idx_device_id = roms.device_id.indexOf( pci_device_code );
+                                if ( (idx_vendor_id !== -1) || (idx_device_id !== -1) && (idx_vendor_id === idx_device_id)) {
+                                      binary = $("#pci_vendor_code").val().toLowerCase() + $("#pci_device_code").val().toLowerCase() + "." + binary;
+                                } else {
+                                    $("#pci_roms_id_error").css({'display': 'inline'});
+                                    $("#pci_roms_id_error").html("Invalid or Unsupported pci_vendor_code or pci_device_code <br/>");
+                                    return;
+                                }
+                        }
+                        /* For all Checkbox in options div */
+                        $("#options").find("input:checkbox").each(function(index) {
+                                var name = $(this).prop("name");
+                                var value = $(this).prop("checked") ? 1 : 0;
+                                if ($(this).val() != value) {
+                                        console.log( "Checkbox:" + index + ": " + name + " default: " + $(this).val() + " new: " + $(this).prop("checked") );
+                                        options += name + ":=" + value + "&";
+                                }
+                        });
+                        /* For all text field in options div */
+                        $("#options").find("input:text").each(function(index) {
+                                var name = $(this).prop("name");
+                                var placeholder = $(this).prop("placeholder");
+                                if ($(this).val() != placeholder) {
+                                        console.log( "Text:" + index + ": " + name + " default: " + $(this).prop("placeholder") + " new: " + $(this).val());
+                                        options += name + "=" + escape($(this).val()) + "&";
+                                }
+                        });
+                }
+
+                console.log('{ BINARY: ['+ binary +'], BINDIR: ['+ bindir +'], DEBUG: ['+ debug +'], REVISION: ['+ revision +'], EMBED: ['+ embed +'] , OPTIONS: ['+ options +']}');
+                return 'build.fcgi?BINARY='+binary+'&BINDIR='+bindir+'&REVISION='+revision+'&DEBUG='+debug+'&EMBED.00script.ipxe='+embed+'&'+options;
+	}
+
 
         /* About Popup */
         $(function() {
@@ -255,6 +347,26 @@ $(document).ready(function() {
                         $('#about_pop_up').bPopup({
                                 contentContainer:'#about_pop_up',
                                 loadUrl: 'about.html'
+                        });
+                });
+
+                $('#save').on('click', function(e) {
+
+                        /* Prevents the default action to be triggered */
+                        e.preventDefault();
+			var self = $(this) //button
+			, content = $('.content');
+
+                        /* Triggering bPopup when click event is fired */
+                        $('#about_pop_up').bPopup({
+                                onOpen: function() {
+					var data = "<h2>Direct buildcfg URL</h2><p>Use this URL to directly retreive your bianry for later use:</p>";
+					data += "<br/>" + document.baseURI + buildcfg();
+			                content.html(data);
+				},
+				onClose: function() {
+					content.empty();
+				}
                         });
                 });
         });
